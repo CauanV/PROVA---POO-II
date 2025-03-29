@@ -1,16 +1,16 @@
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
 
 public class InterfaceGrafica extends JFrame implements ActionListener {
 
-    // ConexaoBancoDeDados objBancoDeDados;
+    ConexaoBancoDeDados objBancoDeDados;
     private JLabel lblPeso;
     private JTextField txtPeso;
-    private JLabel lblAltura;
-    private JTextField txtAltura; // conferir na hora da conversao-> passar pra double
     private JLabel lblImc;
     private JTextField txtImc;
     private JLabel labelCpf;
@@ -19,6 +19,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     private final String[] cursos = { "Direito", "Ciencia da Computacao", "Sistemas de informacao", "Medicina",
             "Psicologia", "Nutricao" };
     private JTextField textCpf;
+    double imc;
     private JLabel msgCadastroSucesso;
     private JLabel labelTipoSang;
     private JLabel labelFator;
@@ -34,13 +35,12 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     private JTextField textAltura;
     private JLabel labelResultadoPesquisa;
     private JLabel labelContatoDeEmergencia;
-    private JTextField textContatoDeEmergencia;
-    private JTextField labelNumeroEmergencia;
-    private JLabel labelMensagem;
+    private JTextField contatoDeEmergencia;
+    private JLabel labelNumeroEmergencia;
     private JLabel labelId;
-    private JButton btnCadastrar;
     private JButton btnRelatorio;
-    private JButton botaoInserir;
+    private JButton calcularImc;
+    private JButton botaoCadastrar;
     private JButton botaoRemover;
     private JFormattedTextField textTelefone;
     private JButton botaoAlterar;
@@ -50,17 +50,27 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     private JTextField textId;
     private JTextArea listaPesquisaBancoDeDados;
     private JScrollPane scrollPesquisaBancoDeDados;
+    private JFormattedTextField textNumeroEmergencia;
+    private JLabel labelTextNumeroEmergencia;
     private Container ctn;
 
     public InterfaceGrafica() {
 
+        msgCadastroSucesso = new JLabel("Cadastro realizado com sucesso!");
+        msgRelatorio = new JLabel("Relatório gerado com sucesso!");
+        labelResultadoPesquisa = new JLabel("Resultado da Pesquisa no Banco de Dados");
+        labelNumeroEmergencia = new JLabel("Número de Emergência");
+        labelId = new JLabel("ID");
         labelNome = new JLabel("Nome");
         textNome = new JTextField();
         labelEndereco = new JLabel("Endereço");
         textEndereco = new JTextField();
         labelTelefone = new JLabel("Telefone");
         textTelefone = new JFormattedTextField();
+        textNumeroEmergencia = new JFormattedTextField();
+        listaPesquisaBancoDeDados = new JTextArea();
         scrollPesquisaBancoDeDados = new JScrollPane(listaPesquisaBancoDeDados);
+        contatoDeEmergencia = new JTextField();
         try {
             textTelefone = new JFormattedTextField(new MaskFormatter("##-#####-####"));
         } catch (java.text.ParseException e) {
@@ -81,29 +91,86 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         labelCurso = new JLabel("Cursos");
         curso = new JComboBox(cursos);
         labelContatoDeEmergencia = new JLabel("Contato de Emergência");
-        textContatoDeEmergencia = new JTextField();
         try {
-            JFormattedTextField textNumeroEmergencia = new JFormattedTextField(new MaskFormatter("##-#####-####"));
+            textNumeroEmergencia = new JFormattedTextField(new MaskFormatter("##-#####-####"));
         } catch (java.text.ParseException e) {
             e.printStackTrace(); // Exibe o erro no console para depuração
             JOptionPane.showMessageDialog(this, "Erro ao formatar o campo de telefone.", "Erro",
                     JOptionPane.ERROR_MESSAGE);
         }
-        labelAltura = new JLabel("Altura em cm");
+        labelTextNumeroEmergencia = new JLabel("Número de Emergência");
+        labelAltura = new JLabel("Altura(m)");
         textAltura = new JTextField();
         // peso e imc
-        lblPeso = new JLabel("Peso em kg");
+        lblPeso = new JLabel("Peso(kg)");
         txtPeso = new JTextField();
         lblImc = new JLabel("IMC");
         txtImc = new JTextField();
         textNome = new JTextField();
         textEndereco = new JTextField();
         textId = new JTextField();
-        botaoInserir = new JButton("Inserir");
+        botaoCadastrar = new JButton("Cadastrar");
         botaoRemover = new JButton("Remover");
         botaoAlterar = new JButton("Alterar");
         botaoPesquisar = new JButton("Pesquisar");
-        labelMensagem = new JLabel(" ----");
+        btnRelatorio = new JButton("Gerar Relatório");
+        calcularImc = new JButton("Calcular IMC");
+
+        // Seção: Dados de Peso, Altura e IMC
+        lblPeso.setBounds(20, 20, 100, 25);
+        txtPeso.setBounds(130, 20, 100, 25);
+        labelAltura.setBounds(20, 60, 100, 25);
+        textAltura.setBounds(130, 60, 100, 25);
+        lblImc.setBounds(20, 100, 100, 25);
+        txtImc.setBounds(130, 100, 100, 25);
+
+        // Seção: Dados de CPF e Curso
+        labelCpf.setBounds(20, 140, 100, 25);
+        textCpf.setBounds(130, 140, 150, 25);
+        labelCurso.setBounds(20, 180, 100, 25);
+        curso.setBounds(130, 180, 180, 25);
+
+        // Seção: Mensagens de Cadastro e Relatório
+        msgCadastroSucesso.setBounds(20, 220, 300, 25);
+        msgRelatorio.setBounds(20, 300, 300, 25);
+
+        // Seção: Dados de Tipo Sanguíneo
+        labelTipoSang.setBounds(20, 260, 120, 25);
+        tipoSanguineo.setBounds(150, 260, 60, 25);
+        labelFator.setBounds(220, 260, 50, 25);
+        fatorRh.setBounds(280, 260, 50, 25);
+
+        // Seção: Dados Pessoais
+        labelNome.setBounds(20, 340, 100, 25);
+        textNome.setBounds(130, 340, 200, 25);
+        labelEndereco.setBounds(20, 380, 100, 25);
+        textEndereco.setBounds(130, 380, 200, 25);
+        labelTelefone.setBounds(20, 420, 100, 25);
+        textTelefone.setBounds(130, 420, 150, 25);
+
+        // Seção: Dados de Pesquisa e Contato de Emergência
+        labelContatoDeEmergencia.setBounds(20, 540, 180, 25);
+        labelNumeroEmergencia.setBounds(360, 540, 150, 25);
+        textNumeroEmergencia.setBounds(480, 540, 150, 25);
+        labelTextNumeroEmergencia.setBounds(330, 540, 150, 25);
+        contatoDeEmergencia.setBounds(160, 540, 160, 25);
+
+        // Seção: Identificação e Mensagens
+        // labelMensagem.setBounds(20, 580, 300, 25);
+        labelId.setBounds(20, 620, 100, 25);
+        textId.setBounds(130, 620, 100, 25);
+
+        // Seção: Botões
+        btnRelatorio.setBounds(150, 660, 120, 30);
+        botaoCadastrar.setBounds(280, 660, 100, 30);
+        botaoRemover.setBounds(390, 660, 100, 30);
+        botaoAlterar.setBounds(500, 660, 100, 30);
+        botaoPesquisar.setBounds(610, 660, 120, 30);
+        calcularImc.setBounds(20, 660, 120, 30);
+
+        // Seção: Área de Pesquisa (Lista e Scroll)
+        listaPesquisaBancoDeDados.setBounds(880, 20, 900, 800);
+        scrollPesquisaBancoDeDados.setBounds(880, 20, 900, 800);
 
         ctn = getContentPane(); // pegar uma referência para à janela principal
         ctn.setLayout(null); // limpar todo o conteúdo da janela
@@ -116,17 +183,112 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         ctn.add(textTelefone);
         ctn.add(labelId);
         ctn.add(textId);
-        ctn.add(botaoInserir);
+        ctn.add(labelCpf);
+        ctn.add(textCpf);
+        ctn.add(labelTipoSang);
+        ctn.add(tipoSanguineo);
+        ctn.add(labelFator);
+        ctn.add(fatorRh);
+        ctn.add(labelCurso);
+        ctn.add(curso);
+        ctn.add(labelContatoDeEmergencia);
+        ctn.add(contatoDeEmergencia);
+        ctn.add(textNumeroEmergencia);
+        ctn.add(labelAltura);
+        ctn.add(textAltura);
+        ctn.add(lblPeso);
+        ctn.add(txtPeso);
+        ctn.add(lblImc);
+        ctn.add(txtImc);
+        ctn.add(labelResultadoPesquisa);
+        ctn.add(scrollPesquisaBancoDeDados);
+        ctn.add(btnRelatorio);
+        ctn.add(botaoCadastrar);
         ctn.add(botaoRemover);
         ctn.add(botaoAlterar);
         ctn.add(botaoPesquisar);
+        ctn.add(listaPesquisaBancoDeDados);
+        ctn.add(labelTextNumeroEmergencia);
+        ctn.add(calcularImc);
         setVisible(true);
         setSize(900, 370);
+        botaoCadastrar.addActionListener(this);
+        botaoRemover.addActionListener(this);
+        botaoAlterar.addActionListener(this);
+        botaoPesquisar.addActionListener(this);
+        btnRelatorio.addActionListener(this);
+        calcularImc.addActionListener(this);
     }
 
     public void actionPerformed(ActionEvent e) {
-        // if (e.getActionCommand().equals("")) {
-        // }
+        if (e.getActionCommand().equals("Calcular IMC")) {
+            Double peso = Double.parseDouble(txtPeso.getText());
+            Double altura = Double.parseDouble(textAltura.getText()); // Convertendo cm para m
+            imc = peso / (altura * altura);
+            if (imc >= 18.5 && imc <= 25) {
+                JOptionPane.showMessageDialog(null, "IMC: " + imc + " - Peso IDEAL");
+            } else if (imc < 18.5) {
+                JOptionPane.showMessageDialog(null, "IMC: " + imc + " - Abaixo do peso IDEAL");
+            } else if (imc >= 25) {
+                JOptionPane.showMessageDialog(null, "IMC: " + imc + " - acima do peso IDEAL");
+            }
+        }
+        if (e.getActionCommand().equals("Cadastrar")) { // cadastrar
+            objBancoDeDados = new ConexaoBancoDeDados();
+            Pessoa objPessoa = new Pessoa(textNome.getText(), textEndereco.getText(), textTelefone.getText(),
+                    textCpf.getText(), (String) tipoSanguineo.getSelectedItem(), (String) fatorRh.getSelectedItem(),
+                    (String) curso.getSelectedItem(), contatoDeEmergencia.getText(), textNumeroEmergencia.getText(),
+                    textAltura.getText(), txtPeso.getText());
+            try {
+                objBancoDeDados.inserirDados(objPessoa);
+                JOptionPane.showMessageDialog(null, "Cadastro realizado com sucesso!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Nao foi possivel realizar insercao!" + ex.getMessage());
+            }
+        }
+        if (e.getActionCommand().equals("Remover")) {
+            objBancoDeDados = new ConexaoBancoDeDados();
+            int id = Integer.parseInt(textId.getText());
+            try {
+                objBancoDeDados.removerDados(id);
+                JOptionPane.showMessageDialog(null, "Cadastro removido com sucesso!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Erro ao remover cadastro: " + ex.getMessage());
+            }
+        }
+        if (e.getActionCommand().equals("Gerar relatorio")) {
+            objBancoDeDados = new ConexaoBancoDeDados();
+            try {
+                String relatorio = objBancoDeDados.relatorio();
+                listaPesquisaBancoDeDados.setText(relatorio);
+                JOptionPane.showMessageDialog(null, "Relatório gerado com sucesso!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Erro ao gerar relatório: " + ex.getMessage());
+            }
+        }
+        if (e.getActionCommand().equals("Alterar")) {
+            objBancoDeDados = new ConexaoBancoDeDados();
+            int id = Integer.parseInt(textId.getText());
+            Pessoa objPessoa = new Pessoa(textNome.getText(), textEndereco.getText(), textTelefone.getText(),
+                    textCpf.getText(), (String) tipoSanguineo.getSelectedItem(), (String) fatorRh.getSelectedItem(),
+                    (String) curso.getSelectedItem(), contatoDeEmergencia.getText(), textNumeroEmergencia.getText(),
+                    textAltura.getText(), txtPeso.getText());
+            try {
+                objBancoDeDados.alterarDados(objPessoa, id);
+                JOptionPane.showMessageDialog(null, "Alteracao feita com sucesso!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Erro ao alterar cadastro: " + ex.getMessage());
+            }
+        }
+        if (e.getActionCommand().equals("Pesquisar")) {
+            objBancoDeDados = new ConexaoBancoDeDados();
+            try {
+                String relatorio = objBancoDeDados.relatorio();
+                listaPesquisaBancoDeDados.setText(relatorio);
+                JOptionPane.showMessageDialog(null, "Relatório gerado com sucesso!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Erro ao gerar relatório: " + ex.getMessage());
+            }
+        }
     }
-
 }
