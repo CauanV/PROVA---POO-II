@@ -27,7 +27,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     private JComboBox tipoSanguineo;
     private final String[] fatoresRh = { "+", "-" };
     private JComboBox fatorRh;
-    private JLabel msgRelatorio;
+    private JLabel msglistagem;
     private JLabel labelNome;
     private JLabel labelEndereco;
     private JLabel labelTelefone;
@@ -38,7 +38,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     private JTextField contatoDeEmergencia;
     private JLabel labelNumeroEmergencia;
     private JLabel labelId;
-    private JButton btnRelatorio;
+    private JButton btnlistagem;
     private JButton calcularImc;
     private JButton botaoCadastrar;
     private JButton botaoRemover;
@@ -57,7 +57,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
     public InterfaceGrafica() {
 
         msgCadastroSucesso = new JLabel("Cadastro realizado com sucesso!");
-        msgRelatorio = new JLabel("Relatório gerado com sucesso!");
+        msglistagem = new JLabel("Relatório gerado com sucesso!");
         labelResultadoPesquisa = new JLabel("Resultado da Pesquisa no Banco de Dados");
         labelNumeroEmergencia = new JLabel("Número de Emergência");
         labelId = new JLabel("ID");
@@ -112,8 +112,8 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         botaoCadastrar = new JButton("Cadastrar");
         botaoRemover = new JButton("Remover");
         botaoAlterar = new JButton("Alterar");
-        botaoPesquisar = new JButton("Pesquisar");
-        btnRelatorio = new JButton("Gerar Relatório");
+        botaoPesquisar = new JButton("Relatorio");
+        btnlistagem = new JButton("Listagem");
         calcularImc = new JButton("Calcular IMC");
 
         // Seção: Dados de Peso, Altura e IMC
@@ -132,7 +132,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
 
         // Seção: Mensagens de Cadastro e Relatório
         msgCadastroSucesso.setBounds(20, 220, 300, 25);
-        msgRelatorio.setBounds(20, 300, 300, 25);
+        msglistagem.setBounds(20, 300, 300, 25);
 
         // Seção: Dados de Tipo Sanguíneo
         labelTipoSang.setBounds(20, 260, 120, 25);
@@ -161,7 +161,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         textId.setBounds(130, 620, 100, 25);
 
         // Seção: Botões
-        btnRelatorio.setBounds(150, 660, 120, 30);
+        btnlistagem.setBounds(150, 660, 120, 30);
         botaoCadastrar.setBounds(280, 660, 100, 30);
         botaoRemover.setBounds(390, 660, 100, 30);
         botaoAlterar.setBounds(500, 660, 100, 30);
@@ -169,8 +169,8 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         calcularImc.setBounds(20, 660, 120, 30);
 
         // Seção: Área de Pesquisa (Lista e Scroll)
-        listaPesquisaBancoDeDados.setBounds(880, 20, 900, 800);
-        scrollPesquisaBancoDeDados.setBounds(880, 20, 900, 800);
+        listaPesquisaBancoDeDados.setBounds(760, 20, 900, 800);
+        scrollPesquisaBancoDeDados.setBounds(760, 20, 900, 800);
 
         ctn = getContentPane(); // pegar uma referência para à janela principal
         ctn.setLayout(null); // limpar todo o conteúdo da janela
@@ -202,7 +202,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         ctn.add(txtImc);
         ctn.add(labelResultadoPesquisa);
         ctn.add(scrollPesquisaBancoDeDados);
-        ctn.add(btnRelatorio);
+        ctn.add(btnlistagem);
         ctn.add(botaoCadastrar);
         ctn.add(botaoRemover);
         ctn.add(botaoAlterar);
@@ -216,7 +216,7 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
         botaoRemover.addActionListener(this);
         botaoAlterar.addActionListener(this);
         botaoPesquisar.addActionListener(this);
-        btnRelatorio.addActionListener(this);
+        btnlistagem.addActionListener(this);
         calcularImc.addActionListener(this);
     }
 
@@ -242,8 +242,10 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
             try {
                 objBancoDeDados.inserirDados(objPessoa);
                 JOptionPane.showMessageDialog(null, "Cadastro realizado com sucesso!");
+                objBancoDeDados.close();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Nao foi possivel realizar insercao!" + ex.getMessage());
+                objBancoDeDados.close();
             }
         }
         if (e.getActionCommand().equals("Remover")) {
@@ -252,18 +254,22 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
             try {
                 objBancoDeDados.removerDados(id);
                 JOptionPane.showMessageDialog(null, "Cadastro removido com sucesso!");
+                objBancoDeDados.close();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Erro ao remover cadastro: " + ex.getMessage());
+                objBancoDeDados.close();
             }
         }
-        if (e.getActionCommand().equals("Gerar relatorio")) {
+        if (e.getActionCommand().equals("Listagem")) {
             objBancoDeDados = new ConexaoBancoDeDados();
             try {
-                String relatorio = objBancoDeDados.relatorio();
-                listaPesquisaBancoDeDados.setText(relatorio);
+                String listagem = objBancoDeDados.relatorio();
+                listaPesquisaBancoDeDados.setText(listagem);
                 JOptionPane.showMessageDialog(null, "Relatório gerado com sucesso!");
+                objBancoDeDados.close();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Erro ao gerar relatório: " + ex.getMessage());
+                objBancoDeDados.close();
             }
         }
         if (e.getActionCommand().equals("Alterar")) {
@@ -276,18 +282,23 @@ public class InterfaceGrafica extends JFrame implements ActionListener {
             try {
                 objBancoDeDados.alterarDados(objPessoa, id);
                 JOptionPane.showMessageDialog(null, "Alteracao feita com sucesso!");
+                objBancoDeDados.close();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Erro ao alterar cadastro: " + ex.getMessage());
+                objBancoDeDados.close();
             }
         }
-        if (e.getActionCommand().equals("Pesquisar")) {
+
+        if (e.getActionCommand().equals("Relatorio")) { // relatorio esta errado
             objBancoDeDados = new ConexaoBancoDeDados();
             try {
-                String relatorio = objBancoDeDados.relatorio();
+                String relatorio = objBancoDeDados.gerarRelatorio();
                 listaPesquisaBancoDeDados.setText(relatorio);
                 JOptionPane.showMessageDialog(null, "Relatório gerado com sucesso!");
+                objBancoDeDados.close();
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Erro ao gerar relatório: " + ex.getMessage());
+                objBancoDeDados.close();
             }
         }
     }

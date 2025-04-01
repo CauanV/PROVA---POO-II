@@ -5,6 +5,7 @@
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "c:\\Users\\Cauan\\OneDrive\\Área de Trabalho\\Arquivos Programacao\\mysql-connector-j-9.1.0\\mysql-connector-j-9.1.0.jar"
+        "c:\\Users\\Cauan\\OneDrive\\Área de Trabalho\\Arquivos Programacao\\mysql-connector-j-9.1.0\\mysql-connector-j-9.1.0.jar",
+        "c:\\Users\\cauan\\OneDrive\\Área de Trabalho\\mysql-connector-j-9.1.0\\mysql-connector-j-9.1.0.jar"
     ]
 }

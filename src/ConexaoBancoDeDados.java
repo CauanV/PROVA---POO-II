@@ -1,14 +1,14 @@
 import java.sql.*;
 import java.util.ArrayList;
-import com.mysql.cj.x.protobuf.MysqlxPrepare.Prepare;
+import java.util.List;
 
 public class ConexaoBancoDeDados {
-    private Connection conexao;
-    private final String URL_Bancodedados = "jdbc:mysql://localhost:3306/pessoa";
-    private final String usuario = "root";
-    private final String senha = "root";
+    private static Connection conexao;
+    private final String URL_Bancodedados = "***";
+    private final String usuario = "***";
+    private final String senha = "***";
 
-    public void ConexaoBancoDeDados() {
+    public ConexaoBancoDeDados() {
         try {
             conexao = DriverManager.getConnection(URL_Bancodedados, usuario, senha);
             System.out.println("Conexao realizada com sucesso");
@@ -18,7 +18,7 @@ public class ConexaoBancoDeDados {
         }
     }
 
-    public void close() {
+    public static void close() {
         try {
             if (conexao != null && !conexao.isClosed()) {
                 conexao.close();
@@ -31,12 +31,10 @@ public class ConexaoBancoDeDados {
     }
 
     public String inserirDados(Pessoa objetoPessoa) throws SQLException {
-        ConexaoBancoDeDados(); // solicitar conexao com banco de dados
-
         if (conexao != null) {
             PreparedStatement psInsert = conexao
                     .prepareStatement(
-                            "INSERT INTO pessoa(nome,endereco,telefone,cpf,tipoSanguineo,fatorRh,curso,ContatoEmergencia,numeroEmergencia,altura,peso,imc) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+                            "INSERT INTO pessoa(nome,endereco,telefone,cpf,tipoSanguineo,fatorRh,curso,contatoEmergencia,numeroEmergencia,altura,peso,imc) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
             psInsert.setString(1, objetoPessoa.getNome());
             psInsert.setString(2, objetoPessoa.getEndereco());
             psInsert.setString(3, objetoPessoa.getTelefone());
@@ -57,10 +55,9 @@ public class ConexaoBancoDeDados {
     }
 
     public String alterarDados(Pessoa objetoPessoa, int id) throws SQLException {
-        ConexaoBancoDeDados(); // solicitar conexao com banco de dados
         if (conexao != null) {
             PreparedStatement comandoUpdate = conexao
-                    .prepareStatement("UPDATE pessoa SET endereco = ?, telefone = ?,nome = ?, WHERE id = ?");
+                    .prepareStatement("UPDATE pessoa SET endereco = ?, telefone = ?, nome = ?, WHERE id = ?");
             comandoUpdate.setString(1, objetoPessoa.getEndereco());
             comandoUpdate.setString(2, objetoPessoa.getTelefone());
             comandoUpdate.setString(3, objetoPessoa.getNome());
@@ -74,7 +71,6 @@ public class ConexaoBancoDeDados {
     }
 
     public String removerDados(int id) throws SQLException {
-        ConexaoBancoDeDados();
         if (conexao != null) {
             PreparedStatement comandoUpdate = conexao.prepareStatement("DELETE FROM pessoa where id = ?");
             comandoUpdate.setInt(1, id);
@@ -87,7 +83,6 @@ public class ConexaoBancoDeDados {
     }
 
     public String relatorio() throws SQLException {
-        ConexaoBancoDeDados();
 
         ArrayList<String> relatorioBancoDeDados = new ArrayList<String>();
 
@@ -107,7 +102,9 @@ public class ConexaoBancoDeDados {
             String textAltura;
             String txtPeso;
             double imc = 0;
+            int id;
             while (resultadoConsultaBD.next()) {
+                id = resultadoConsultaBD.getInt("id");
                 nome = resultadoConsultaBD.getString("nome");
                 endereco = resultadoConsultaBD.getString("endereco");
                 telefone = resultadoConsultaBD.getString("telefone");
@@ -121,11 +118,15 @@ public class ConexaoBancoDeDados {
                 txtPeso = resultadoConsultaBD.getString("peso");
                 imc = resultadoConsultaBD.getDouble("imc");
 
-                resultado = "# ID: " + "Nome: " + nome + "Endereco: " + endereco + "Telefone: " + telefone + "CPF: "
-                        + cpf + "Tipo Sanguineo: " + tipoSanguineo + "Fator Rh: " + fatorRh + "Curso: " + curso
-                        + "Contato de Emergencia: " + ContatoDeEmergencia + "Numero de Emergencia: "
+                resultado = "# ID: " + id + " Nome: " + nome + " Endereco: " + endereco + " Telefone: " + telefone
+                        + " CPF: "
+                        + cpf + " Tipo Sanguineo: " + tipoSanguineo + " Fator Rh: " + fatorRh + "\nCurso: " + curso
+                        + " Contato de Emergencia: " + ContatoDeEmergencia + " Numero de Emergencia: "
                         + textNumeroEmergencia
-                        + "Altura: " + textAltura + "Peso: " + txtPeso + "IMC: " + imc;
+                        + " Altura: " + textAltura + " Peso: " + txtPeso + " IMC: " + imc + "\n\n"; // ver se esse \n
+                                                                                                    // resolve
+                // o problema de nao
+                // separacao de pesssoas
                 relatorioBancoDeDados.add(resultado);
             }
             close();
@@ -134,25 +135,87 @@ public class ConexaoBancoDeDados {
         return null;
     }
 
-    public String pesquisarDados(int id) throws SQLException {
-        ConexaoBancoDeDados();
-        String resultado = null;
+    public static String gerarRelatorio() throws SQLException {
+        List<Double> pesos = new ArrayList<>();
+        List<Double> alturas = new ArrayList<>();
+        List<Double> imcs = new ArrayList<>();
+
+        String maiorPeso = "", menorPeso = "", maiorAltura = "", menorAltura = "", maiorIMC = "", menorIMC = "";
+        double maxPeso = Double.MIN_VALUE, minPeso = Double.MAX_VALUE;
+        double maxAltura = Double.MIN_VALUE, minAltura = Double.MAX_VALUE;
+        double maxIMC = Double.MIN_VALUE, minIMC = Double.MAX_VALUE;
+
+        String sql = "SELECT nome, peso, altura, tipoSanguineo, fatorRH, curso, imc FROM pessoa";
+
         if (conexao != null) {
-            PreparedStatement comandoConsulta = conexao.prepareStatement("SELECT * FROM pessoa WHERE id = ?");
-            comandoConsulta.setInt(1, id);
-            ResultSet resultadoConsultaBD = comandoConsulta.executeQuery(); // usado para armazenar os resultados de uma
-                                                                            // consulta SQL executada em um banco de
-                                                                            // dados. Ele é retornado pelo método
-                                                                            // executeQuery() de um objeto Statement ou
-                                                                            // PreparedStatement
-            if (resultadoConsultaBD.next()) {
-                resultado = "ID: " + resultadoConsultaBD.getInt("id") + ", Nome: "
-                        + resultadoConsultaBD.getString("nome")
-                        + ", Endereco: " + resultadoConsultaBD.getString("endereco") + ", Telefone: "
-                        + resultadoConsultaBD.getString("telefone");
+            try (Statement stmt = conexao.createStatement();
+                    ResultSet rs = stmt.executeQuery(sql)) {
+
+                while (rs.next()) {
+                    String nome = rs.getString("nome");
+                    String tipoSanguineo = rs.getString("tipoSanguineo");
+                    String fatorRH = rs.getString("fatorRH");
+                    String curso = rs.getString("curso");
+
+                    double peso = Double.parseDouble(rs.getString("peso"));
+                    double altura = Double.parseDouble(rs.getString("altura"));
+                    double imc = rs.getDouble("imc");
+
+                    // Processa Peso
+                    if (peso > maxPeso) {
+                        maxPeso = peso;
+                        maiorPeso = nome + " - " + tipoSanguineo + fatorRH;
+                    }
+                    if (peso < minPeso) {
+                        minPeso = peso;
+                        menorPeso = nome + " - " + tipoSanguineo + fatorRH;
+                    }
+                    pesos.add(peso);
+
+                    // Processa Altura
+                    if (altura > maxAltura) {
+                        maxAltura = altura;
+                        maiorAltura = nome + " - " + curso;
+                    }
+                    if (altura < minAltura) {
+                        minAltura = altura;
+                        menorAltura = nome + " - " + curso;
+                    }
+                    alturas.add(altura);
+
+                    // Processa IMC
+                    if (imc > maxIMC) {
+                        maxIMC = imc;
+                        maiorIMC = nome;
+                    }
+                    if (imc < minIMC) {
+                        minIMC = imc;
+                        menorIMC = nome;
+                    }
+                    imcs.add(imc);
+                }
             }
+
+            // Cálculo das médias
+            double mediaPeso = pesos.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            double mediaAltura = alturas.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            double mediaIMC = imcs.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+
+            // Construção da String do Relatório
+            String relatorio = " ****** Relatório de Pessoas ****** \n\n"
+                    + " Maior Peso: " + maxPeso + "kg (" + maiorPeso + ")\n"
+                    + " Menor Peso: " + minPeso + "kg (" + menorPeso + ")\n"
+                    + " Média dos Pesos: " + String.format("%.2f", mediaPeso) + "kg\n\n"
+                    + " Maior Altura: " + maxAltura + "m (" + maiorAltura + ")\n"
+                    + " Menor Altura: " + minAltura + "m (" + menorAltura + ")\n"
+                    + " Média das Alturas: " + String.format("%.2f", mediaAltura) + "m\n\n"
+                    + " Média dos IMCs: " + String.format("%.2f", mediaIMC) + "\n"
+                    + " Maior IMC: " + maxIMC + " (" + maiorIMC + ")\n"
+                    + " Menor IMC: " + minIMC + " (" + menorIMC + ")\n\n\n";
+
             close();
+            return relatorio; // Retorna a string do relatório
         }
-        return resultado;
+        return "Erro: Conexão com o banco de dados não disponível.";
     }
 }

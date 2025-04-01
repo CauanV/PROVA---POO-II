@@ -122,7 +122,7 @@ public class Pessoa {
 
     public Double calculoImc() {
         Double peso = Double.parseDouble(txtPeso);
-        Double altura = Double.parseDouble(txtPeso); // Convertendo cm para m
+        Double altura = Double.parseDouble(textAltura);
         this.imc = peso / (altura * altura);
         return this.imc;
     }
